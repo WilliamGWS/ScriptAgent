@@ -10,30 +10,13 @@ REQUIRED_OS_VERSION="22.04"
 #VALIDACION DE LA VERSION DEL AGENTE2
 ZABBIX_AGENT_VERSION="6.0"
 
-#VALIDACION DEL HOSTNAME DEL AGENTE zabbix
-#HOSTNAME_AGENT="noc-bfortaleza-agente"
-
 set -e  # Activar el modo de detener el script en caso de error
 
-#VALIDACION DEL HOSTNAME DEL AGENTE zabbix
-# Obtener el hostname actual
-hostname=$(hostname)
-
-# Validar el hostname
-if [ -n "$hostname" ]; then
-    log "El hostname es: $hostname"
-else
-    log "El hostname no es válido."
-    exit 1
-fi
-
-HOSTNAME_AGENT=$hostname
-
-# SOLICITAR AL USUARIO QUE INGRESE LA DIRECCIÓN IP DEL PROXY
-echo "Ingrese la Dirección IP del Proxy:"
-read ZABBIX_SERVER_IP
-
-#set -e  # Activar el modo de detener el script en caso de error
+# Función para enviar mensajes al log y a la consola
+log() {
+  local message="$1"
+  echo -e "\n$(date '+%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
+}
 
 # Banners y funciones de mensajes
 BannerGWS() {
@@ -71,12 +54,7 @@ BannerGWS() {
   "
 }
 
-# Función para enviar mensajes al log y a la consola
-log() {
-  local message="$1"
-  #echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
-  echo -e "\n$(date '+%Y-%m-%d %H:%M:%S') - $message" | tee -a "$LOG_FILE"
-}
+
 
 # FUNCION PARA VALIDAR QUE EL USUARIO TENGA PERMISOS ROOT
 function check_root() {
@@ -90,6 +68,28 @@ function check_root() {
   else
     log "INICIANDO EJECUCION DE SCRIPT"
   fi
+}
+
+
+#VALIDACION DEL HOSTNAME DEL AGENTE zabbix
+# Obtener el hostname actual
+function check_hostname() {
+hostname=$(hostname)
+# Validar el hostname
+if [ -n "$hostname" ]; then
+    log "El hostname es: $hostname"
+else
+    log "El hostname no es válido."
+    exit 1
+fi
+}
+
+HOSTNAME_AGENT=$hostname
+
+# SOLICITAR AL USUARIO QUE INGRESE LA DIRECCIÓN IP DEL PROXY
+function Solicitud_IP(){
+echo "Ingrese la Dirección IP del Proxy:"
+read ZABBIX_SERVER_IP
 }
 
 # Función para verificar que el sistema operativo sea Ubuntu 22.04
@@ -186,6 +186,7 @@ function Install_zabbix_agent() {
 log
 BannerGWS
 check_root
+check_hostname
 check_os_version
 check_connectivity
 BannerZabbixAgent2
